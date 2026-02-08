@@ -1,12 +1,17 @@
 from pathlib import Path
 import hashlib
+import time
+from datetime import datetime
+
+# Files to ignore during monitoring
+IGNORE_FILES = [".baseline.txt", ".DS_Store", "Thumbs.db"]
 
 class FileMonitor:
     """Monitors a directory or a single file for creation, deletion, and modification."""
 
     def __init__(self, path: str, baseline_file: str = None, logger=print):
         self.path = Path(path).resolve()
-        self.logger = logger  # Can be print() or GUI callback
+        self.logger = logger
 
         # Detect if path is a file or directory
         if self.path.is_file():
@@ -57,39 +62,44 @@ class FileMonitor:
     def _get_files(self):
         if self.single_file:
             return [self.path]
-        return [f for f in self.directory.iterdir() if f.is_file() and f != self.baseline_file]
+        return [
+            f for f in self.directory.rglob("*")
+            if f.is_file() and f.name not in IGNORE_FILES
+        ]
 
     def scan(self):
-        """Create or update baseline for the folder."""
+        """Create or update baseline with all current files."""
         files = self._get_files()
-        for f in files:
-            self.file_hashes[f.name] = self.calculate_hash(f)
+        self.file_hashes = {f.name: self.calculate_hash(f) for f in files}
 
         baseline_exists = self.baseline_file.exists()
         self.save_baseline()
 
+        ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         if baseline_exists:
-            self.logger(f"[INFO] Baseline updated for {len(files)} file(s)")
+            self.logger(f"[{ts}] [INFO] Baseline updated for {len(files)} file(s)")
         else:
-            self.logger(f"[INFO] Baseline created for {len(files)} file(s)")
-        self.logger(f"[INFO] Baseline saved at: {self.baseline_file}")
+            self.logger(f"[{ts}] [INFO] Baseline created for {len(files)} file(s)")
+        self.logger(f"[{ts}] [INFO] Baseline saved at: {self.baseline_file}")
 
     def check_changes(self):
         """Check for created, deleted, or modified files."""
         current = {f.name: self.calculate_hash(f) for f in self._get_files()}
 
-        old_files = set(self.file_hashes)
-        new_files = set(current)
+        old = set(self.file_hashes)
+        new = set(current)
 
-        for f in new_files - old_files:
-            self.logger(f"[CREATED] {f}")
+        ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        for f in old_files - new_files:
-            self.logger(f"[DELETED] {f}")
+        for f in new - old:
+            self.logger(f"[{ts}] [CREATED] {f}")
 
-        for f in old_files & new_files:
+        for f in old - new:
+            self.logger(f"[{ts}] [DELETED] {f}")
+
+        for f in old & new:
             if self.file_hashes[f] != current[f]:
-                self.logger(f"[MODIFIED] {f}")
+                self.logger(f"[{ts}] [MODIFIED] {f}")
 
         self.file_hashes = current
         self.save_baseline()
