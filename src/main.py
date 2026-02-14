@@ -3,17 +3,43 @@ import time
 from src.file_monitor import FileMonitor
 
 def run_cli():
-    """Run the file monitor in CLI mode."""
+    from src.file_monitor import FileMonitor
+    import time
+
     path = input("Enter directory or file to monitor: ").strip()
     monitor = FileMonitor(path)
-    monitor.scan()  # create/update baseline
-    print("Baseline processed. Monitoring files... (Ctrl+C to stop)")
-    try:
-        while True:
+
+    while True:
+        print("\n--- File Integrity Monitor (CLI) ---")
+        print("1. Create / Update Baseline")
+        print("2. Check Changes Once")
+        print("3. Start Monitoring")
+        print("4. Exit")
+
+        choice = input("Select an option: ").strip()
+
+        if choice == "1":
+            monitor.scan()
+
+        elif choice == "2":
             monitor.check_changes()
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print("Stopped monitoring.")
+
+        elif choice == "3":
+            print("Monitoring... Press Ctrl+C to stop")
+            try:
+                while True:
+                    monitor.check_changes()
+                    time.sleep(1)
+            except KeyboardInterrupt:
+                print("\nStopped monitoring.")
+
+        elif choice == "4":
+            print("Exiting...")
+            break
+
+        else:
+            print("Invalid option. Try again.")
+
 
 def run_gui():
     """Run the file monitor in GUI mode."""
