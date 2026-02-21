@@ -31,7 +31,7 @@ class FileMonitor:
         else:
             self.baseline_file = self.directory / ".baseline.txt"
 
-        # 🔐 Encryption Key Handling
+        # Encryption Key Handling
         self.key_file = self.directory / ".key.key"
 
         if not self.key_file.exists():
@@ -44,7 +44,7 @@ class FileMonitor:
 
         self.cipher = Fernet(key)
 
-        # 📁 Logging setup (forensic log)
+        # Logging setup (forensic log)
         logging.basicConfig(
             filename=self.directory / "monitor.log",
             level=logging.INFO,
@@ -65,7 +65,7 @@ class FileMonitor:
             logging.error(f"Hashing failed for {filepath}: {e}")
             return ""
 
-    # 🔐 Encrypted baseline loading
+    # Encrypted baseline loading
     def load_baseline(self):
         if self.baseline_file.exists():
             try:
@@ -82,7 +82,7 @@ class FileMonitor:
                 self.logger(f"[ERROR] Loading baseline failed: {e}")
                 logging.error(f"Loading baseline failed: {e}")
 
-    # 🔐 Encrypted baseline saving
+    # Encrypted baseline saving
     def save_baseline(self):
         try:
             data = "\n".join(

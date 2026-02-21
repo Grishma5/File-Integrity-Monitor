@@ -2,3 +2,9 @@ __pycache__/
 *.pyc
 *.log
 .env
+
+# Temp test folders
+test_folder/
+test_*/
+tests/
+*.log
